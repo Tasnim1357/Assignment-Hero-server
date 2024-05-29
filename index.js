@@ -30,7 +30,8 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const featureCollection=client.db('assignmentManage').collection('features')
+    const featureCollection=client.db('assignmentManage').collection('features');
+    const assignmentCollection=client.db('assignmentManage').collection('assignments');
 
 
     app.get('/features',async(req,res)=>{
@@ -38,6 +39,16 @@ async function run() {
       const result= await cursor.toArray();
       res.send(result);
     })
+
+
+
+    app.post('/assignments', async(req, res) => {
+      const newAssignment=req.body
+      console.log(newAssignment)
+      const result=await assignmentCollection.insertOne(newAssignment)
+      res.send(result)
+    })
+
 
 
     // Send a ping to confirm a successful connection
