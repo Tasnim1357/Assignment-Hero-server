@@ -41,20 +41,44 @@ async function run() {
     })
 
     
-    app.get('/assignments',async(req,res)=>{
-      const cursor=assignmentCollection.find();
-      const result= await cursor.toArray();
-      res.send(result);
-    })
+    // app.get('/assignments',async(req,res)=>{
+    //   const cursor=assignmentCollection.find();
+    //   const result= await cursor.toArray();
+    //   res.send(result);
+    // })
+
+    
+
+    app.get('/assignments', async (req, res) => {
+      try {
+        const difficulty = req.query.difficulty;
+        let query = {};
+        if (difficulty && difficulty !== 'all') {
+          query.difficulty = difficulty;
+        }
+        const assignments = await assignmentCollection.find(query).toArray();
+        res.send(assignments);
+      } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+      }
+    });
+    
+
+
+    
+    
 
 
 
     app.post('/assignments', async(req, res) => {
       const newAssignment=req.body
-      console.log(newAssignment)
+     
       const result=await assignmentCollection.insertOne(newAssignment)
       res.send(result)
     })
+
+
+
 
 
 
