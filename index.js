@@ -40,6 +40,13 @@ async function run() {
       res.send(result);
     })
 
+    
+    app.get('/assignments',async(req,res)=>{
+      const cursor=assignmentCollection.find();
+      const result= await cursor.toArray();
+      res.send(result);
+    })
+
 
 
     app.post('/assignments', async(req, res) => {
