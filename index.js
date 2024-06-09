@@ -32,6 +32,7 @@ async function run() {
 
     const featureCollection=client.db('assignmentManage').collection('features');
     const assignmentCollection=client.db('assignmentManage').collection('assignments');
+    const submissionCollection=client.db('assignmentManage').collection('submission');
 
 
     app.get('/features',async(req,res)=>{
@@ -48,6 +49,14 @@ async function run() {
     // })
 
     
+
+  //   app.get('/assignments/:id',async(req,res) => {
+  //     const id = req.params.id;
+  //     const query={_id: new ObjectId(id)}
+  //     const result=await assignmentCollection.findOne(query);
+   
+  //     res.send(result);
+  // })
 
     app.get('/assignments', async (req, res) => {
       try {
@@ -70,13 +79,32 @@ async function run() {
       res.send(result);
     })
     
+    app.get('/myassignments/:userEmail', async (req, res) => {
+      const userEmail = req.params.userEmail;
     
+      try {
+    
+        const pendingRequests = await submissionCollection.find({
+          userEmail: userEmail,
+        }).toArray();
+    
+        res.json(pendingRequests);
+      } catch (error) {
+        console.error('Error retrieving pending requests:', error);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
 
 
     app.post('/assignments', async(req, res) => {
       const newAssignment=req.body
      
       const result=await assignmentCollection.insertOne(newAssignment)
+      res.send(result)
+    })
+    app.post('/submission', async(req, res) => {
+      const newSubmission=req.body
+      const result=await submissionCollection.insertOne(newSubmission)
       res.send(result)
     })
 
