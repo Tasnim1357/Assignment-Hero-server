@@ -41,22 +41,30 @@ async function run() {
       res.send(result);
     })
 
-    
-    // app.get('/assignments',async(req,res)=>{
-    //   const cursor=assignmentCollection.find();
-    //   const result= await cursor.toArray();
-    //   res.send(result);
-    // })
 
     
 
-  //   app.get('/assignments/:id',async(req,res) => {
-  //     const id = req.params.id;
-  //     const query={_id: new ObjectId(id)}
-  //     const result=await assignmentCollection.findOne(query);
-   
-  //     res.send(result);
-  // })
+
+
+  app.get('/submitted',async(req,res)=>{
+    const cursor=submissionCollection.find();
+    const result= await cursor.toArray();
+    res.send(result);
+  })
+
+
+app.get('/pending', async (req, res) => {
+  try {
+    const status = req.query.status;
+    const query = { status: status };
+    const result = await submissionCollection.find(query).toArray();
+    res.send(result);
+  } catch (error) {
+    console.error('Error fetching assignments:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
     app.get('/assignments', async (req, res) => {
       try {
@@ -123,6 +131,20 @@ async function run() {
         }
       }
       const result=await assignmentCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+    })
+    app.patch('/marked/:id', async(req,res)=>{
+      const id= req.params.id;
+      const filter={_id: new ObjectId(id)};
+      const updatedmark = req.body;
+    
+      const updateDoc={
+              $set:{
+             ...updatedmark
+               
+              },
+      }
+      const result=await submissionCollection.updateOne(filter,updateDoc)
       res.send(result)
     })
    
