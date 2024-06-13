@@ -10,12 +10,23 @@ const port= process.env.PORT || 5000;
 
 // middleware
 
-app.use(cors({
-  origin: [
-    'http://localhost:5173'
-  ],
-  credentials: true
-}));
+// app.use(cors({
+//   origin: [
+//     'http://localhost:5173'
+//   ],
+//   credentials: true
+// }));
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://ph-assignment11-6c711.web.app",
+      "https://ph-assignment11-6c711.firebaseapp.com",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser())
 
@@ -57,11 +68,17 @@ const verifyToken=(req, res, next)=>{
 }
 
 
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  secure: process.env.NODE_ENV === "production" ? true: false,
+};
+
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const featureCollection=client.db('assignmentManage').collection('features');
     const assignmentCollection=client.db('assignmentManage').collection('assignments');
@@ -153,11 +170,7 @@ app.get('/pending',logger,verifyToken, async (req, res) => {
     const user= req.body;
     console.log('user for token',user)
     const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn : '4h'})
-    res.cookie('token',token,{
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none'
-    }
+    res.cookie('token',token,cookieOptions
 
     )
     .send({success: true});
@@ -168,18 +181,18 @@ app.get('/pending',logger,verifyToken, async (req, res) => {
     app.post('/logout', async(req, res)=>{
       const user= req.body;
       console.log('logging out', user);
-      res.clearCookie('token',{maxAge:0}).send({success: true})
+      res.clearCookie('token',{...cookieOptions,maxAge:0}).send({success: true})
     })
 
 
 
-    app.post('/assignments', async(req, res) => {
+    app.post('/assignments',logger,verifyToken, async(req, res) => {
       const newAssignment=req.body
      
       const result=await assignmentCollection.insertOne(newAssignment)
       res.send(result)
     })
-    app.post('/submission', async(req, res) => {
+    app.post('/submission',logger,verifyToken, async(req, res) => {
       const newSubmission=req.body
       const result=await submissionCollection.insertOne(newSubmission)
       res.send(result)
@@ -202,7 +215,7 @@ app.get('/pending',logger,verifyToken, async (req, res) => {
       const result=await assignmentCollection.updateOne(filter,updatedDoc)
       res.send(result)
     })
-    app.patch('/marked/:id', async(req,res)=>{
+    app.patch('/marked/:id',logger,verifyToken, async(req,res)=>{
       const id= req.params.id;
       const filter={_id: new ObjectId(id)};
       const updatedmark = req.body;
@@ -217,7 +230,7 @@ app.get('/pending',logger,verifyToken, async (req, res) => {
       res.send(result)
     })
    
-    app.delete('/assignments/:id',async(req,res)=>{
+    app.delete('/assignments/:id',logger,verifyToken,async(req,res)=>{
       const id= req.params.id;
       const query={_id:new ObjectId(id)};
       const result= await assignmentCollection.deleteOne(query);
@@ -229,7 +242,7 @@ app.get('/pending',logger,verifyToken, async (req, res) => {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
